@@ -21,10 +21,13 @@ import (
 func runAfterburner(target, notify, exe, arg string) {
 	cmd := exec.Command(exe, arg)
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+
 	if err := cmd.Start(); err != nil {
 		log.Printf("Failed to launch Afterburner with profile %s: %v", arg, err)
 	} else {
+		arg := strings.TrimLeft(arg, "-Profile")
 		log.Printf("Successfully applied profile: %s", arg)
+
 		// Toast Notification
 		notify := strings.ToLower(notify)
 		if notify == "true" {
@@ -38,6 +41,7 @@ func runAfterburner(target, notify, exe, arg string) {
 				log.Printf("Failed to send notification %v", err)
 			}
 		}
+
 	}
 }
 
@@ -59,10 +63,10 @@ func checkStateAndApplyProfile(cfg *config.Config, currentProfile *string) {
 	} else {
 		desiredProfile = cfg.ProfileOff
 	}
-	if activeTarget == "" { activeTarget = "Profile_Off" }
+	if activeTarget == "" { activeTarget = "None" }
 
 	if desiredProfile != *currentProfile {
-		log.Printf("Running application detected: '%s', Desired profile: %s", activeTarget, desiredProfile)
+		log.Printf("Running application detected: '%s', Desired profile: %s", activeTarget, strings.TrimLeft(desiredProfile, "-Profile"))
 		runAfterburner(activeTarget, cfg.Notifications, cfg.AfterburnerPath, desiredProfile)
 		*currentProfile = desiredProfile
 	}
@@ -109,19 +113,15 @@ func main() {
 }
 
 func onReady() {
-	//trayicon.HideConsole()
-
 	systray.SetIcon(trayicon.IconData)
 	systray.SetTitle("MSI Afterburner Profile Switcher")
 	systray.SetTooltip("MSI Afterburner Profile Switcher is running")
-	//sConsole := systray.AddMenuItem("Toogle Console", "Toogle Console")
+
 	mLog := systray.AddMenuItem("Show Log", "Open Log Window")
 	mQuit := systray.AddMenuItem("Quit", "Quit this app")
 	go func() {
 		for {
 			select {
-			//case <-sConsole.ClickedCh:
-			//	trayicon.ToggleConsole()
 			case <-mLog.ClickedCh:
 				logger.OpenOrFocusLogWindow()
 			case <-mQuit.ClickedCh:
@@ -146,5 +146,5 @@ func onReady() {
 }
 
 func onExit() {
-	//showConsole()
+	//Nothing
 }
