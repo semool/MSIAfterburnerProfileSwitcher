@@ -22,10 +22,10 @@ func runAfterburner(target, notify, exe, arg string) {
 	cmd := exec.Command(exe, arg)
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 
+	arg = strings.TrimLeft(arg, "-Profile")
 	if err := cmd.Start(); err != nil {
 		log.Printf("Failed to launch Afterburner with profile %s: %v", arg, err)
 	} else {
-		arg := strings.TrimLeft(arg, "-Profile")
 		log.Printf("Successfully applied profile: %s", arg)
 
 		// Toast Notification
@@ -53,6 +53,7 @@ func checkStateAndApplyProfile(cfg *config.Config, currentProfile *string) {
 	activeTarget, isActive := watcher.FirstActiveTarget(cfg.Overrides)
 
 	var desiredProfile string
+
 	if isActive {
 		profile := cfg.Overrides[activeTarget]
 		if profile != "" {
